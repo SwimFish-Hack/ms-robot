@@ -8,8 +8,8 @@ import (
 	"strings"
 	"sync"
 
-	"ms-robot/internal/logutil"
-	adb "ms-robot/third_party/adb"
+	"github.com/ms-robots/ms-robot/internal/logutil"
+	adb "github.com/ms-robots/ms-robot/third_party/adb"
 )
 
 // DialTCPFunc 用于连接 adb 主机上的端口（如 forward 端口），走 proxy 时与 adb 命令同路

@@ -2,7 +2,7 @@ package streaming
 
 import (
 	"fmt"
-	"ms-robot/internal/logutil"
+	"github.com/ms-robots/ms-robot/internal/logutil"
 	"net"
 	"sync"
 

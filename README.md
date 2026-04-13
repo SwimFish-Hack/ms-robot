@@ -8,40 +8,48 @@
 
 多设备控制台与文件管理（上传、批量推送 / 安装 APK 等）：
 
-![多设备控制台与文件管理](./docs/assets/1.png)
+多设备控制台与文件管理
 
 单路投全屏与控制示例：
 
-![单设备投屏与控制](./docs/assets/2.png)
+单设备投屏与控制
 
 ---
 
 ## 为什么选择 Ms-Robot
 
-| 特点 | 说明 |
-|------|------|
-| **浏览器远控界面** | 在 **电脑浏览器** 里完成投屏、触控、文件，进阶还有命令行（Shell）。 |
-| **手机 0 安装 App** | 系统干净安全，不占用空间。 |
-| **多平台适配** | 支持Windows，Linux，Mac运行,单文件部署，超低性能消耗。 |
-| **多会话协同** | 可同时查看，控制，同步广播多台设备， 多用户可同时操控。 |
-| **多 ADB 端点** | 完全基于Adb协议，支持本机 `adb`、远程 `adb` 主机、可选 SOCKS5 代理与断线重试，方便对接机房或家里的 `adb server`。 |
+
+| 特点              | 说明                                                                          |
+| --------------- | --------------------------------------------------------------------------- |
+| **浏览器远控界面**     | 在 **电脑浏览器** 里完成投屏、触控、文件，进阶还有命令行（Shell）。                                     |
+| **手机 0 安装 App** | 系统干净安全，不占用空间。                                                               |
+| **多平台适配**       | 支持Windows，Linux，Mac运行,单文件部署，超低性能消耗。                                         |
+| **多会话协同**       | 可同时查看，控制，同步广播多台设备， 多用户可同时操控。                                                |
+| **多 ADB 端点**    | 完全基于Adb协议，支持本机 `adb`、远程 `adb` 主机、可选 SOCKS5 代理与断线重试，方便对接机房或家里的 `adb server`。 |
+
 
 ---
 
 ## 使用前准备
 
-1. **Android 设备**：开启「开发者选项」与 **USB 调试**（或已 `adb tcpip` 的网络调试）。  
-2. **本机安装 Android SDK Platform-Tools**（内含 `adb`），并确保 `adb` 在 `PATH` 中。  
-3. **启动 adb server（本机默认场景）**  
-   - 连接 USB 后执行：`adb devices`（会自动拉起本机 adb server）。  
-   - 或显式：`adb start-server`。  
-4. **连接远程 adb server（可选）**  
-   - 若你在另一台机器上跑了 `adb -a nodaemon server` 或默认的 `5037` 服务，可在本机用 `-endpoint adb=那台机器IP` 连接（见下文「命令行参数」）。  
-   - 常见网络调试：`adb connect 手机IP:5555`，手机上仍由 **本机或远程** 的 `adb` 暴露设备列表给 Ms-Robot。
+1. **Android 设备**：开启「开发者选项」与 **USB 调试**（或已 `adb tcpip` 的网络调试）。
+2. **本机安装 Android SDK Platform-Tools**（内含 `adb`），并确保 `adb` 在 `PATH` 中。
+3. **启动 adb server（本机默认场景）**
+  - 连接 USB 后执行：`adb devices`（会自动拉起本机 adb server）。  
+  - 或显式：`adb start-server`。
+4. **连接远程 adb server（可选）**
+  - 若你在另一台机器上跑了 `adb -a nodaemon server` 或默认的 `5037` 服务，可在本机用 `-endpoint adb=那台机器IP` 连接（见下文「命令行参数」）。  
+  - 常见网络调试：`adb connect 手机IP:5555`，手机上仍由 **本机或远程** 的 `adb` 暴露设备列表给 Ms-Robot。
 
 ---
 
-## 构建与运行
+## 通过Go安装
+
+```bash
+go install github.com/ms-robots/ms-robot@latest
+```
+
+## 手动构建运行
 
 ### 支持多平台多架构
 
@@ -68,8 +76,10 @@ PowerShell 示例（与 Bash 等价）：
 $env:GOOS = "linux"; $env:GOARCH = "amd64"; make
 ```
 
-### Docker快捷运行方式（适用树莓派等小主机）
-首先自行构建好对应平台对应架构的```ms-robot.exe```, 上传到设备里
+### Docker 运行adb+ms-robot（适用树莓派等小主机）
+
+首先自行构建好对应平台对应架构的`ms-robot.exe`, 上传到设备里
+
 ```shell
 ls -lah ms-robot.exe # 文件已经上传好了
 
@@ -80,40 +90,49 @@ docker run -d --name ms-robot --restart always \
    -v $PWD:/app -w /app --entrypoint sh \
    backplane/adb -c "adb server; ./ms-robot.exe"
 ```
-直接运行，adb签名文件在```$PWD/.android```
+
+直接运行，adb签名文件在`$PWD/.android`
 
 ### Windows,Mac
+
 先启动一下adb
+
 ```shell
 adb server
 ```
+
 然后启动ms-robot
+
 ```shell
 ./ms-robot.exe
 ```
 
 ### 启动后
 
-默认浏览器访问：**`http://127.0.0.1:20605`**（可用 `-http-listen` 修改）。
+默认浏览器访问：`**http://127.0.0.1:20605**`（可用 `-http-listen` 修改）。
 
 ### 环境变量
 
-| 变量 | 说明 |
-|------|------|
+
+| 变量          | 说明                                                  |
+| ----------- | --------------------------------------------------- |
 | `LOG_LEVEL` | 日志级别：`debug` / `info` / `warn` / `error`，默认 `info`。 |
+
 
 ---
 
 ## 命令行参数
 
-| 参数 | 默认值 | 说明 |
-|------|--------|------|
-| `-http-listen` | `tcp://:20605` | HTTP 监听地址。支持 `tcp://主机:端口`、仅端口 `tcp://:20605`，以及 **Unix 域套接字** `unix:///path/to.sock` 等（由 `listenutil` 解析）。 |
-| `-turn-port` | `3478` | **内置 TURN/STUN** 监听端口；若占用请改端口。ICE 地址会结合请求的 `Host` 动态下发给浏览器。 |
-| `-debug` | `false` | 调试模式（例如前端可通过 `?debug=1` 等开关加载调试能力）。 |
-| `-without-endpoint` | `false` | 为 `true` 时**不**自动添加默认端点；且若未传任何 `-endpoint`，则端点列表为空。 |
-| `-endpoints-mutable` | `false` | 为 `true` 时允许通过界面或 API **增删改** ADB 端点；为 `false` 时相关能力关闭。 |
-| `-endpoint` | （可多次） | 增加一个 ADB 端点；**可重复指定**。不传且未设 `-without-endpoint` 时，默认等价于 `adb=localhost,name=本机`（`retry` 默认 `-1` 表示持续重试）。 |
+
+| 参数                   | 默认值            | 说明                                                                                                          |
+| -------------------- | -------------- | ----------------------------------------------------------------------------------------------------------- |
+| `-http-listen`       | `tcp://:20605` | HTTP 监听地址。支持 `tcp://主机:端口`、仅端口 `tcp://:20605`，以及 **Unix 域套接字** `unix:///path/to.sock` 等（由 `listenutil` 解析）。 |
+| `-turn-port`         | `3478`         | **内置 TURN/STUN** 监听端口；若占用请改端口。ICE 地址会结合请求的 `Host` 动态下发给浏览器。                                                 |
+| `-debug`             | `false`        | 调试模式（例如前端可通过 `?debug=1` 等开关加载调试能力）。                                                                         |
+| `-without-endpoint`  | `false`        | 为 `true` 时**不**自动添加默认端点；且若未传任何 `-endpoint`，则端点列表为空。                                                         |
+| `-endpoints-mutable` | `false`        | 为 `true` 时允许通过界面或 API **增删改** ADB 端点；为 `false` 时相关能力关闭。                                                     |
+| `-endpoint`          | （可多次）          | 增加一个 ADB 端点；**可重复指定**。不传且未设 `-without-endpoint` 时，默认等价于 `adb=localhost,name=本机`（`retry` 默认 `-1` 表示持续重试）。    |
+
 
 ### `-endpoint` 写法示例
 
@@ -126,10 +145,10 @@ retry=-1,name=本机,adb=localhost
 
 字段说明（键值对，逗号分隔，顺序不限）：
 
-- **`adb`**：`adb` 服务地址（主机或 `host:5037`）。  
-- **`name`**：在 Web 上显示的端点备注。  
-- **`proxy`**：可选，SOCKS5 代理 URL。adb连接能经过sock5，适用于单端口转发场景  
-- **`retry`**：断线重试策略；`0` 表示不重试并可触发移除逻辑；`-1` 表示一直重试。
+- `**adb**`：`adb` 服务地址（主机或 `host:5037`）。  
+- `**name**`：在 Web 上显示的端点备注。  
+- `**proxy**`：可选，SOCKS5 代理 URL。adb连接能经过sock5，适用于单端口转发场景  
+- `**retry**`：断线重试策略；`0` 表示不重试并可触发移除逻辑；`-1` 表示一直重试。
 
 ---
 

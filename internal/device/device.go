@@ -1,15 +1,15 @@
 package device
 
 import (
+	"github.com/ms-robots/ms-robot/internal/logutil"
 	"log"
-	"ms-robot/internal/logutil"
 	"net"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
-	adb "ms-robot/third_party/adb"
+	adb "github.com/ms-robots/ms-robot/third_party/adb"
 )
 
 // DeviceKey 返回 Manager 内存储的 key：transportID>0 时为 "serial:transportID"，否则为 serial

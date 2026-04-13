@@ -2,7 +2,7 @@ package websocket
 
 import (
 	"encoding/json"
-	"ms-robot/internal/device"
+	"github.com/ms-robots/ms-robot/internal/device"
 	"sync"
 
 	"github.com/gorilla/websocket"

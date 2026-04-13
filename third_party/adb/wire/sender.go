@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"ms-robot/third_party/adb/internal/errors"
+	"github.com/ms-robots/ms-robot/third_party/adb/internal/errors"
 )
 
 // Sender sends messages to the server.

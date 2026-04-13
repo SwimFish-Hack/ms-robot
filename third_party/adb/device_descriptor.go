@@ -10,6 +10,7 @@ import "fmt"
 // 即：-s 用 serial 选设备，协议里用 host-serial 或 transport:SERIAL；
 // -t 用 transport id（adb devices -l 的 transport_id）选设备，协议里用 host-transport-id 或 transport-id:ID。
 // 不能把 "serial:transportID" 整串当 serial 传给协议，否则会变成 host-serial:xxx:1，adbd 无法识别。
+//
 //go:generate stringer -type=deviceDescriptorType
 type deviceDescriptorType int
 

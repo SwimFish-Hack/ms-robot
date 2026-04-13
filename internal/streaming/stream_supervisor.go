@@ -7,7 +7,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"ms-robot/internal/logutil"
+	"github.com/ms-robots/ms-robot/internal/logutil"
 
 	webrtc "github.com/pion/webrtc/v3"
 )

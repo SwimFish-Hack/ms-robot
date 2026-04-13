@@ -1,6 +1,6 @@
 package wire
 
-import "ms-robot/third_party/adb/internal/errors"
+import "github.com/ms-robots/ms-robot/third_party/adb/internal/errors"
 
 const (
 	// Chunks cannot be longer than 64k.

@@ -63,10 +63,18 @@ func (s *Server) handleShellWebSocket(c *gin.Context) {
 			if mt == websocket.BinaryMessage && len(data) >= 9 && data[0] == shellResizeMsgType {
 				cols := binary.BigEndian.Uint32(data[1:5])
 				rows := binary.BigEndian.Uint32(data[5:9])
-				if cols < 1 { cols = 1 }
-				if rows < 1 { rows = 1 }
-				if cols > 10000 { cols = 10000 }
-				if rows > 10000 { rows = 10000 }
+				if cols < 1 {
+					cols = 1
+				}
+				if rows < 1 {
+					rows = 1
+				}
+				if cols > 10000 {
+					cols = 10000
+				}
+				if rows > 10000 {
+					rows = 10000
+				}
 				stty := []byte(fmt.Sprintf("stty rows %d cols %d\n", rows, cols))
 				if _, err := shellConn.Write(stty); err != nil {
 					return

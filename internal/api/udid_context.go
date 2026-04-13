@@ -1,7 +1,7 @@
 package api
 
 import (
-	"ms-robot/internal/device"
+	"github.com/ms-robots/ms-robot/internal/device"
 
 	"github.com/gin-gonic/gin"
 )

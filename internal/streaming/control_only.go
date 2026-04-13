@@ -4,8 +4,8 @@ import (
 	"embed"
 	"sync"
 
-	"ms-robot/internal/logutil"
-	adb "ms-robot/third_party/adb"
+	"github.com/ms-robots/ms-robot/internal/logutil"
+	adb "github.com/ms-robots/ms-robot/third_party/adb"
 )
 
 // DeviceScrcpyPool 按设备缓存的常驻 scrcpy 实例（与 u2 类似：启动后一直持有；仅开启投屏时读视频流，关闭投屏只停读流，scrcpy 不退出）

@@ -2,8 +2,8 @@ package api
 
 import (
 	"fmt"
-	"ms-robot/internal/logutil"
-	"ms-robot/internal/streaming"
+	"github.com/ms-robots/ms-robot/internal/logutil"
+	"github.com/ms-robots/ms-robot/internal/streaming"
 	"net/http"
 	"strings"
 

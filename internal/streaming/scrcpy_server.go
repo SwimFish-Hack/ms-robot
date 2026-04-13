@@ -16,10 +16,10 @@ import (
 	"sync"
 	"time"
 
-	"ms-robot/internal/apk"
-	"ms-robot/internal/deviceupload"
-	"ms-robot/internal/logutil"
-	adb "ms-robot/third_party/adb"
+	"github.com/ms-robots/ms-robot/internal/apk"
+	"github.com/ms-robots/ms-robot/internal/deviceupload"
+	"github.com/ms-robots/ms-robot/internal/logutil"
+	adb "github.com/ms-robots/ms-robot/third_party/adb"
 )
 
 // 与设备端 app_process 启动的 com.genymobile.scrcpy.Server 进程匹配（pkill -f）

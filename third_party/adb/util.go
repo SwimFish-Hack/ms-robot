@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"ms-robot/third_party/adb/internal/errors"
+	"github.com/ms-robots/ms-robot/third_party/adb/internal/errors"
 )
 
 var (

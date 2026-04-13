@@ -5,8 +5,8 @@ import (
 	"net"
 	"runtime"
 
-	"ms-robot/third_party/adb/internal/errors"
-	"ms-robot/third_party/adb/wire"
+	"github.com/ms-robots/ms-robot/third_party/adb/internal/errors"
+	"github.com/ms-robots/ms-robot/third_party/adb/wire"
 )
 
 // Dialer knows how to create connections to an adb server.

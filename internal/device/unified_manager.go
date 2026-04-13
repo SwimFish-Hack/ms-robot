@@ -7,9 +7,9 @@ import (
 	"strings"
 	"sync"
 
-	"ms-robot/internal/endpoint"
-	"ms-robot/internal/logutil"
-	adb "ms-robot/third_party/adb"
+	"github.com/ms-robots/ms-robot/internal/endpoint"
+	"github.com/ms-robots/ms-robot/internal/logutil"
+	adb "github.com/ms-robots/ms-robot/third_party/adb"
 )
 
 // 端点连接状态（用于前端展示）

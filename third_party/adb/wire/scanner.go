@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"strconv"
 
-	"ms-robot/third_party/adb/internal/errors"
+	"github.com/ms-robots/ms-robot/third_party/adb/internal/errors"
 )
 
 // TODO(zach): All EOF errors returned from networoking calls should use ConnectionResetError.

@@ -6,13 +6,13 @@ import (
 	"embed"
 	"encoding/hex"
 	"fmt"
+	"github.com/ms-robots/ms-robot/internal/logutil"
 	"io"
-	"ms-robot/internal/logutil"
 	"os"
 	"strings"
 	"time"
 
-	adb "ms-robot/third_party/adb"
+	adb "github.com/ms-robots/ms-robot/third_party/adb"
 )
 
 // Device 设备侧执行 shell 与 push 的抽象

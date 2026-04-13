@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"sync"
 
-	"ms-robot/third_party/adb/internal/errors"
+	"github.com/ms-robots/ms-robot/third_party/adb/internal/errors"
 )
 
 // ErrorResponseDetails is an error message returned by the server for a particular request.

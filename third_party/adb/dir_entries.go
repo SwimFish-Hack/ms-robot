@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"ms-robot/third_party/adb/wire"
+	"github.com/ms-robots/ms-robot/third_party/adb/wire"
 )
 
 // DirEntry holds information about a directory entry on a device.

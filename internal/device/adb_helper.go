@@ -3,7 +3,7 @@ package device
 import (
 	"fmt"
 
-	adb "ms-robot/third_party/adb"
+	adb "github.com/ms-robots/ms-robot/third_party/adb"
 )
 
 // AdbClient 返回唯一的 third_party adb 客户端

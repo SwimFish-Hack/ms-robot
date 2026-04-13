@@ -1,4 +1,4 @@
-module ms-robot
+module github.com/ms-robots/ms-robot
 
 go 1.23
 

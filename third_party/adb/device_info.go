@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"ms-robot/internal/logutil"
-	"ms-robot/third_party/adb/internal/errors"
+	"github.com/ms-robots/ms-robot/internal/logutil"
+	"github.com/ms-robots/ms-robot/third_party/adb/internal/errors"
 )
 
 func parseInt(s string) (int, error) {

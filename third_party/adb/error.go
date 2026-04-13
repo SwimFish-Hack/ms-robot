@@ -1,6 +1,6 @@
 package adb
 
-import "ms-robot/third_party/adb/internal/errors"
+import "github.com/ms-robots/ms-robot/third_party/adb/internal/errors"
 import sysErrors "errors"
 
 type ErrCode errors.ErrCode

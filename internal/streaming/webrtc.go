@@ -3,9 +3,9 @@ package streaming
 import (
 	"embed"
 	"fmt"
-	devicemgr "ms-robot/internal/device"
-	"ms-robot/internal/logutil"
-	"ms-robot/third_party/adb"
+	devicemgr "github.com/ms-robots/ms-robot/internal/device"
+	"github.com/ms-robots/ms-robot/internal/logutil"
+	"github.com/ms-robots/ms-robot/third_party/adb"
 	"net"
 	"strings"
 	"sync"
