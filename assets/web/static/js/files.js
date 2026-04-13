@@ -686,6 +686,13 @@ async function handleBatchPush() {
     renderFileList();
 }
 
+// 与 app.js getDeviceId 一致：须在覆盖 d.udid 之前用接口里的「序列号」字段计算（与卡片 data-device-id 对齐）
+function deviceSlotIdFromListItem(d) {
+    const serial = (d && d.udid) || (d && d.serial) || '';
+    const eid = (d && d.endpoint_id) || '';
+    return serial + (eid ? '@' + eid : '');
+}
+
 // 与 app.js 一致：多端点时 API 路径用 serial[:transport_id][@endpoint_id]
 function toApiUdid(d) {
     const s = d.udid || d.serial || '';
@@ -701,7 +708,10 @@ async function getAndroidDevices() {
         const data = await response.json();
         return (data.devices || [])
             .filter(d => d.status === 'online')
-            .map(d => ({ ...d, udid: toApiUdid(d) }));
+            .map(d => {
+                const slotId = deviceSlotIdFromListItem(d);
+                return { ...d, slotId, udid: toApiUdid(d) };
+            });
     } catch (error) {
         console.error('获取设备列表失败:', error);
         return [];
@@ -735,25 +745,28 @@ function getDeviceInfos(deviceUdids) {
 }
 
 // 获取选中的Android设备（统一复用）
-// 返回: { selectedDevices: string[], selectedDeviceObjects: Array }
+// 返回: { selectedDevices: apiUdid[]（与路径 /api/devices/:udids 一致）, selectedDeviceObjects }
 async function getSelectedAndroidDevices(errorMessage = '请先选择要操作的目标设备') {
-    const selectedDevices = getSelectedDevices();
-    if (selectedDevices.length === 0) {
+    const selectedSlotIds = getSelectedDevices();
+    if (selectedSlotIds.length === 0) {
         showNotification(errorMessage, 'error');
         return null;
     }
 
-    // 获取Android设备信息
     const devices = await getAndroidDevices();
-    const selectedDeviceObjects = devices.filter(device => selectedDevices.includes(device.udid));
+    const selectedDeviceObjects = devices.filter(device =>
+        selectedSlotIds.includes(device.slotId)
+    );
 
     if (selectedDeviceObjects.length === 0) {
         showNotification('选中的设备中没有可用的Android设备', 'error');
         return null;
     }
 
+    const selectedApiUdids = selectedDeviceObjects.map(d => d.udid);
+
     return {
-        selectedDevices,
+        selectedDevices: selectedApiUdids,
         selectedDeviceObjects
     };
 }
@@ -795,21 +808,28 @@ function renderDeviceListHTML(devices) {
 }
 
 // 将后端批量结果统一为数组格式。支持 data 为 { succeeded, failed } 或旧版数组
+// 注意：Go 中空 slice 若从未 append 会 JSON 成 null，不能用 Array.isArray(null) 判死
 function normalizeBatchData(data) {
     if (Array.isArray(data)) return data;
-    if (data && Array.isArray(data.succeeded) && Array.isArray(data.failed)) {
-        const a = (data.succeeded || []).map(r => ({ ...r, success: true, message: r.message }));
-        (data.failed || []).forEach(r => a.push({ ...r, success: false, message: r.error }));
-        return a;
-    }
-    return [];
+    if (!data || typeof data !== 'object') return [];
+    const succ = Array.isArray(data.succeeded) ? data.succeeded : (data.succeeded == null ? [] : null);
+    const fail = Array.isArray(data.failed) ? data.failed : (data.failed == null ? [] : null);
+    if (succ === null || fail === null) return [];
+    const a = [];
+    succ.forEach(r => a.push({ ...r, success: true, message: r.message }));
+    fail.forEach(r => a.push({
+        ...r,
+        success: false,
+        message: (r.error != null && String(r.error) !== '') ? r.error : r.message
+    }));
+    return a;
 }
 
-// 显示批量操作结果对话框（安装/发送完成，参考 ADB Shell 结果弹窗）
-// results: [{ udid, file_id, success, message, target_dir? }]
+// 显示批量操作结果对话框（安装/发送完成，与批量 Shell 的 showShellCommandResults 一致：每台必有回显区）
+// results: [{ udid, file_id, success, message, output?, target_dir? }]
 function showBatchOperationResultDialog(title, results) {
     if (!results || results.length === 0) return;
-    const existing = document.querySelector('.batch-result-dialog-modal');
+    const existing = document.querySelector('.batch-shell-modal[data-batch-result="1"]');
     if (existing) existing.remove();
 
     const successCount = results.filter(r => r.success).length;
@@ -820,8 +840,18 @@ function showBatchOperationResultDialog(title, results) {
         return f ? f.name : fileId;
     };
 
+    /** 与 Shell 弹窗一致：优先设备回显 output，否则 message / error 文案 */
+    const echoText = (r) => {
+        const out = (r.output != null && String(r.output).trim() !== '') ? String(r.output) : '';
+        if (out) return out;
+        const msg = (r.message != null && String(r.message).trim() !== '') ? String(r.message) : '';
+        if (msg) return msg;
+        return r.success ? '(无输出)' : '未知错误';
+    };
+
     const modal = document.createElement('div');
-    modal.className = 'batch-result-dialog-modal batch-shell-modal';
+    modal.className = 'batch-shell-modal';
+    modal.dataset.batchResult = '1';
     const bodyHTML = `
             <div style="padding: 15px; border-bottom: 1px solid #eee; margin-bottom: 15px;">
                 <div style="display: flex; gap: 20px; align-items: center;">
@@ -833,6 +863,7 @@ function showBatchOperationResultDialog(title, results) {
                 ${results.map(r => {
                     const fileName = getFileName(r.file_id);
                     const targetInfo = r.target_dir ? ` → ${escapeHtml(r.target_dir)}` : '';
+                    const body = echoText(r);
                     return `
                         <div style="margin-bottom: 15px; padding: 12px; border: 1px solid #eee; border-radius: 6px; background: ${r.success ? '#f0f9f4' : '#fef0f0'};">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -844,11 +875,9 @@ function showBatchOperationResultDialog(title, results) {
                                     ${r.success ? '✅ 成功' : '❌ 失败'}
                                 </span>
                             </div>
-                            ${!r.success && r.message ? `
                             <div style="background: #2c3e50; color: #ecf0f1; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto; white-space: pre-wrap; word-break: break-all;">
-                                ${escapeHtml(r.message)}
+                                ${escapeHtml(body)}
                             </div>
-                            ` : ''}
                         </div>
                     `;
                 }).join('')}
@@ -860,18 +889,17 @@ function showBatchOperationResultDialog(title, results) {
     const shell = createDeviceSelectModal({ maxWidth: '800px', title, bodyHTML });
     if (shell && shell.wrap) {
         modal.appendChild(shell.wrap);
-        if (shell.closeBtn) shell.closeBtn.classList.add('batch-result-close');
     } else {
-        modal.innerHTML = `<div class="device-select-content" style="max-width:800px;"><div class="device-select-header"><h3 style="margin:0;">${title}</h3><button class="close-btn batch-result-close">×</button></div><div class="device-select-body">${bodyHTML}</div></div>`;
+        modal.innerHTML = `<div class="device-select-content" style="max-width:800px;"><div class="device-select-header"><h3 style="margin:0;">${escapeHtml(title)}</h3><button type="button" class="close-btn batch-result-close">×</button></div><div class="device-select-body">${bodyHTML}</div></div>`;
     }
-    modal.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 10000;';
     document.body.appendChild(modal);
 
     const close = () => modal.remove();
-    const closeBtnEl = modal.querySelector('.batch-result-close');
-    if (closeBtnEl) closeBtnEl.onclick = close;
-    modal.querySelector('.batch-result-close-btn').onclick = close;
-    modal.onclick = (e) => { if (e.target === modal) close(); };
+    const closeBtnEl = modal.querySelector('.close-btn');
+    if (closeBtnEl) closeBtnEl.addEventListener('click', close);
+    const bottomClose = modal.querySelector('.batch-result-close-btn');
+    if (bottomClose) bottomClose.addEventListener('click', close);
+    modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
 }
 
 function escapeHtml(s) {

@@ -210,7 +210,7 @@ func (h *Handler) installAPK(udid, fileID, filePath string) InstallResult {
 			UDID:    udid,
 			FileID:  fileID,
 			Success: false,
-			Message: "获取设备失败: " + err.Error(),
+			Message: "失败\n" + err.Error(),
 		}
 	}
 
@@ -221,7 +221,7 @@ func (h *Handler) installAPK(udid, fileID, filePath string) InstallResult {
 			UDID:    udid,
 			FileID:  fileID,
 			Success: false,
-			Message: "文件信息不存在",
+			Message: "失败\n文件信息不存在",
 		}
 	}
 
@@ -232,7 +232,7 @@ func (h *Handler) installAPK(udid, fileID, filePath string) InstallResult {
 			UDID:    udid,
 			FileID:  fileID,
 			Success: false,
-			Message: "打开文件失败: " + err.Error(),
+			Message: "失败\n" + err.Error(),
 		}
 	}
 	defer file.Close()
@@ -243,7 +243,7 @@ func (h *Handler) installAPK(udid, fileID, filePath string) InstallResult {
 			UDID:    udid,
 			FileID:  fileID,
 			Success: false,
-			Message: "获取文件信息失败: " + err.Error(),
+			Message: "失败\n" + err.Error(),
 		}
 	}
 
@@ -264,7 +264,7 @@ func (h *Handler) installAPK(udid, fileID, filePath string) InstallResult {
 			UDID:    udid,
 			FileID:  fileID,
 			Success: false,
-			Message: "创建临时目录失败: " + err.Error(),
+			Message: "失败\n" + err.Error(),
 		}
 	}
 	// 删除 apks 下超过 30 分钟的文件，避免堆积
@@ -278,84 +278,47 @@ func (h *Handler) installAPK(udid, fileID, filePath string) InstallResult {
 			UDID:    udid,
 			FileID:  fileID,
 			Success: false,
-			Message: "推送APK文件失败: " + err.Error(),
+			Message: "失败\n" + err.Error(),
 		}
 	}
 	logutil.Infof("[安装] 推送完成 设备=%s 文件=%s 开始执行 pm install", udid, fileID)
 
 	// 使用pm install命令安装APK（-r表示替换已存在的应用）；安装后不删 apks 下文件，避免部分机型异步读导致解析失败
 	output, err := adbDevice.RunCommand("pm", "install", "-r", tempPath)
+	outTrim := strings.TrimSpace(output)
 	if err != nil {
-		msg := installFailureMessage(output)
-		if output == "" {
-			msg = "安装失败: " + err.Error()
+		msg := "失败"
+		if outTrim == "" {
+			msg = "失败\n" + err.Error()
 		}
 		return InstallResult{
 			UDID:    udid,
 			FileID:  fileID,
 			Success: false,
 			Message: msg,
+			Output:  output,
 		}
 	}
 
-	// 检查输出中是否包含Success（不区分大小写）
 	outputLower := strings.ToLower(output)
-	success := strings.Contains(outputLower, "success")
-
-	if success {
+	if strings.Contains(outputLower, "success") {
 		logutil.Infof("[安装] 成功 设备=%s 文件=%s", udid, fileID)
 		return InstallResult{
 			UDID:    udid,
 			FileID:  fileID,
 			Success: true,
-			Message: "安装成功",
+			Message: "成功",
+			Output:  output,
 		}
 	}
-	outTrim := strings.TrimSpace(output)
 	logutil.Errorf("[安装] 失败 设备=%s 文件=%s 原因=pm install 输出=%s", udid, fileID, outTrim)
-	msg := installFailureMessage(outTrim)
 	return InstallResult{
 		UDID:    udid,
 		FileID:  fileID,
 		Success: false,
-		Message: msg,
+		Message: "失败",
+		Output:  output,
 	}
-}
-
-// installFailureMessage 从 pm install 输出中提取用户可读信息，保证返回非空
-func installFailureMessage(output string) string {
-	outTrim := strings.TrimSpace(output)
-	lower := strings.ToLower(outTrim)
-	if strings.Contains(lower, "not enough space") || strings.Contains(outTrim, "Requested internal only, but not enough space") {
-		return "安装失败: 设备内部存储空间不足"
-	}
-	if strings.Contains(lower, "install_failed_insufficient_storage") {
-		return "安装失败: 设备存储空间不足"
-	}
-	if strings.Contains(lower, "install_failed_update_incompatible") {
-		return "安装失败: 与已安装版本不兼容，请先卸载"
-	}
-	if strings.Contains(lower, "install_failed_signature") || strings.Contains(lower, "signature") {
-		return "安装失败: 签名校验失败"
-	}
-	prefix := "安装失败: "
-	if strings.Contains(lower, "install_parse_failed") || strings.Contains(lower, "parse") {
-		prefix = "安装失败(解析错误): "
-	}
-	if idx := strings.Index(outTrim, "\n"); idx > 0 {
-		first := strings.TrimSpace(outTrim[:idx])
-		if len(first) > 120 {
-			first = first[:117] + "..."
-		}
-		return prefix + first
-	}
-	if len(outTrim) > 200 {
-		return prefix + outTrim[:197] + "..."
-	}
-	if len(outTrim) > 0 {
-		return prefix + outTrim
-	}
-	return prefix + "未知原因（设备未返回具体错误）"
 }
 
 // pushFile 推送文件到设备
@@ -369,7 +332,7 @@ func (h *Handler) pushFile(udid, fileID, filePath, targetDir string) PushResult 
 			FileID:    fileID,
 			TargetDir: targetDir,
 			Success:   false,
-			Message:   "获取设备失败: " + err.Error(),
+			Message:   "失败\n" + err.Error(),
 		}
 	}
 
@@ -381,7 +344,7 @@ func (h *Handler) pushFile(udid, fileID, filePath, targetDir string) PushResult 
 			FileID:    fileID,
 			TargetDir: targetDir,
 			Success:   false,
-			Message:   "文件信息不存在",
+			Message:   "失败\n文件信息不存在",
 		}
 	}
 
@@ -404,7 +367,7 @@ func (h *Handler) pushFile(udid, fileID, filePath, targetDir string) PushResult 
 			FileID:    fileID,
 			TargetDir: targetDir,
 			Success:   false,
-			Message:   "打开文件失败: " + err.Error(),
+			Message:   "失败\n" + err.Error(),
 		}
 	}
 	defer file.Close()
@@ -416,7 +379,7 @@ func (h *Handler) pushFile(udid, fileID, filePath, targetDir string) PushResult 
 			FileID:    fileID,
 			TargetDir: targetDir,
 			Success:   false,
-			Message:   "获取文件信息失败: " + err.Error(),
+			Message:   "失败\n" + err.Error(),
 		}
 	}
 
@@ -428,7 +391,7 @@ func (h *Handler) pushFile(udid, fileID, filePath, targetDir string) PushResult 
 			FileID:    fileID,
 			TargetDir: targetDir,
 			Success:   false,
-			Message:   "创建目录失败: " + err.Error(),
+			Message:   "失败\n" + err.Error(),
 		}
 	}
 
@@ -441,7 +404,7 @@ func (h *Handler) pushFile(udid, fileID, filePath, targetDir string) PushResult 
 			FileID:    fileID,
 			TargetDir: targetDir,
 			Success:   false,
-			Message:   "推送文件失败: " + err.Error(),
+			Message:   "失败\n" + err.Error(),
 		}
 	}
 	logutil.Infof("[推送] 成功 设备=%s 文件=%s", udid, fileID)
@@ -450,7 +413,7 @@ func (h *Handler) pushFile(udid, fileID, filePath, targetDir string) PushResult 
 		FileID:    fileID,
 		TargetDir: targetDir,
 		Success:   true,
-		Message:   "推送成功",
+		Message:   "成功\n" + targetPath,
 	}
 }
 
@@ -488,6 +451,7 @@ func (h *Handler) processTask(task *Task) {
 			installResult := h.installAPK(task.UDID, task.FileID, filePath)
 			result.Success = installResult.Success
 			result.Message = installResult.Message
+			result.Output = installResult.Output
 
 		case TaskTypePush:
 			pushResult := h.pushFile(task.UDID, task.FileID, filePath, task.TargetDir)
@@ -627,6 +591,13 @@ func resolveTargetDir(body *DevicesAdbPushBody, udid, fileID string) string {
 	return defaultPath
 }
 
+// batchItemSetOutput 批量安装/推送 API：有设备原始回显时写入 output（前端优先展示）
+func batchItemSetOutput(item gin.H, r *TaskResult) {
+	if r != nil && r.Output != "" {
+		item["output"] = r.Output
+	}
+}
+
 // HandleDevicesAdbPush 多设备多文件推送（deviceKeys 由调用方从 context 解析后传入）
 // POST /api/devices/:udids/adb/push/:files  body: { "target_dir", "file_target_dirs", "device_target_dirs" }
 func (h *Handler) HandleDevicesAdbPush(c *gin.Context, deviceKeys []string) {
@@ -686,24 +657,23 @@ func (h *Handler) HandleDevicesAdbPush(c *gin.Context, deviceKeys []string) {
 
 	logutil.Infof("[推送] 请求 设备数=%d 文件数=%d 任务数=%d", len(validUdids), len(validFileIDs), len(taskIDs))
 	results := h.waitForTaskResults(taskIDs, 500*time.Millisecond, 5*time.Minute)
-	successCount := 0
-	for _, r := range results {
-		if r.Success {
-			successCount++
-		}
-	}
-	logutil.Infof("[推送] 完成 成功=%d 失败=%d", successCount, len(results)-successCount)
-	var succeeded, failed []gin.H
+	succeeded := make([]gin.H, 0)
+	failed := make([]gin.H, 0)
+	ok := 0
 	for i, r := range results {
 		item := gin.H{"udid": pairs[i].udid, "file_id": pairs[i].fileID, "target_dir": pairs[i].targetDir}
 		if r.Success {
 			item["message"] = r.Message
+			batchItemSetOutput(item, r)
 			succeeded = append(succeeded, item)
+			ok++
 		} else {
 			item["error"] = r.Message
+			batchItemSetOutput(item, r)
 			failed = append(failed, item)
 		}
 	}
+	logutil.Infof("[推送] 完成 成功=%d 失败=%d", ok, len(results)-ok)
 	c.JSON(200, gin.H{"success": true, "data": gin.H{"succeeded": succeeded, "failed": failed}})
 }
 
@@ -788,11 +758,13 @@ func (h *Handler) HandleDevicesAdbInstall(c *gin.Context, deviceKeys []string) {
 		}
 	}
 
-	var succeeded, failed []gin.H
+	succeeded := make([]gin.H, 0)
+	failed := make([]gin.H, 0)
 	for i, r := range results {
 		item := gin.H{"udid": pairs[i].udid, "file_id": pairs[i].fileID}
 		if r.Success {
 			item["message"] = r.Message
+			batchItemSetOutput(item, r)
 			succeeded = append(succeeded, item)
 		} else {
 			errMsg := r.Message
@@ -800,6 +772,7 @@ func (h *Handler) HandleDevicesAdbInstall(c *gin.Context, deviceKeys []string) {
 				errMsg = "安装失败"
 			}
 			item["error"] = errMsg
+			batchItemSetOutput(item, r)
 			failed = append(failed, item)
 		}
 	}

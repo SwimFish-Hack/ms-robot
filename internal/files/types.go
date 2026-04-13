@@ -38,6 +38,8 @@ type InstallResult struct {
 	FileID  string `json:"file_id"`
 	Success bool   `json:"success"`
 	Message string `json:"message"`
+	// Output 设备上 pm install 的原始标准输出（与 POST .../adb/shell 的 results[].output 一致）
+	Output string `json:"output,omitempty"`
 }
 
 // PushResult 推送结果
@@ -83,6 +85,7 @@ type Task struct {
 type TaskResult struct {
 	Success bool   `json:"success"`
 	Message string `json:"message"`
+	Output  string `json:"output,omitempty"` // 安装任务：pm install 原始回显
 }
 
 // TaskStatusResponse 任务状态响应（内部轮询用）
